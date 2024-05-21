@@ -3,8 +3,9 @@ import * as React from "react";
 import { useGestureResponder } from "react-gesture-responder";
 import { animated, interpolate, useSpring } from "react-spring";
 import { GridItemContext } from "./GridItemContext";
+
 export function GridItem(_a) {
-    var children = _a.children, style = _a.style, className = _a.className, other = tslib_1.__rest(_a, ["children", "style", "className"]);
+    var children = _a.children, style = _a.style, className = _a.className, disableAnimation = _a.disableAnimation, other = tslib_1.__rest(_a, ["children", "style", "className", "disableAnimation"]);
     var context = React.useContext(GridItemContext);
     if (!context) {
         throw Error("Unable to find GridItem context. Please ensure that GridItem is used as a child of GridDropZone");
@@ -15,8 +16,6 @@ export function GridItem(_a) {
     var startCoords = React.useRef([left, top]);
     var _b = tslib_1.__read(useSpring(function () {
         if (mountWithTraverseTarget) {
-            // this feels really brittle. unsure of a better
-            // solution for now.
             var mountXY = mountWithTraverseTarget;
             endTraverse();
             return {
@@ -42,7 +41,7 @@ export function GridItem(_a) {
         set({
             xy: [x, y],
             zIndex: "1",
-            immediate: true,
+            immediate: disableAnimation ? true : false,
             opacity: 1,
             scale: 1
         });
@@ -88,10 +87,10 @@ export function GridItem(_a) {
                 zIndex: "0",
                 opacity: 1,
                 scale: 1,
-                immediate: false
+                immediate: disableAnimation ? true : false
             });
         }
-    }, [dragging.current, left, top]);
+    }, [dragging.current, left, top, disableAnimation]);
     var props = tslib_1.__assign({ className: "GridItem" +
             (isDragging ? " dragging" : "") +
             (!!disableDrag ? " disabled" : "") +
