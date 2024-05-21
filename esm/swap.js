@@ -1,5 +1,5 @@
 import * as tslib_1 from "tslib";
-export default function move(array, moveIndex, toIndex) {
+export function swap(array, moveIndex, toIndex) {
     /* #move - Moves an array item from one position in an array to another.
        Note: This is a pure function so a new array will be returned, instead
        of altering the array argument.

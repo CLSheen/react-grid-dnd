@@ -2,16 +2,16 @@ import * as tslib_1 from "tslib";
 import * as React from "react";
 import { useMeasure } from "./use-measure";
 import { GridContext } from "./GridContext";
-import { GridItem } from "./GridItem";
-import swap from "./swap";
+import { swap } from "./swap";
 import { getPositionForIndex, getTargetIndex } from "./helpers";
+import { GridItemContext } from "./GridItemContext";
 export function GridDropZone(_a) {
-    var items = _a.items, id = _a.id, boxesPerRow = _a.boxesPerRow, children = _a.children, getKey = _a.getKey, _b = _a.disableDrag, disableDrag = _b === void 0 ? false : _b, _c = _a.disableDrop, disableDrop = _c === void 0 ? false : _c, rowHeight = _a.rowHeight, other = tslib_1.__rest(_a, ["items", "id", "boxesPerRow", "children", "getKey", "disableDrag", "disableDrop", "rowHeight"]);
-    var _d = React.useContext(GridContext), traverse = _d.traverse, startTraverse = _d.startTraverse, endTraverse = _d.endTraverse, register = _d.register, onChange = _d.onChange, remove = _d.remove, getActiveDropId = _d.getActiveDropId;
+    var id = _a.id, boxesPerRow = _a.boxesPerRow, children = _a.children, style = _a.style, _b = _a.disableDrag, disableDrag = _b === void 0 ? false : _b, _c = _a.disableDrop, disableDrop = _c === void 0 ? false : _c, rowHeight = _a.rowHeight, other = tslib_1.__rest(_a, ["id", "boxesPerRow", "children", "style", "disableDrag", "disableDrop", "rowHeight"]);
+    var _d = React.useContext(GridContext), traverse = _d.traverse, startTraverse = _d.startTraverse, endTraverse = _d.endTraverse, register = _d.register, measureAll = _d.measureAll, onChange = _d.onChange, remove = _d.remove, getActiveDropId = _d.getActiveDropId;
     var ref = React.useRef(null);
-    var bounds = useMeasure(ref).bounds;
-    var _e = tslib_1.__read(React.useState(null), 2), draggingIndex = _e[0], setDraggingIndex = _e[1];
-    var _f = tslib_1.__read(React.useState(null), 2), placeholder = _f[0], setPlaceholder = _f[1];
+    var _e = useMeasure(ref), bounds = _e.bounds, remeasure = _e.remeasure;
+    var _f = tslib_1.__read(React.useState(null), 2), draggingIndex = _f[0], setDraggingIndex = _f[1];
+    var _g = tslib_1.__read(React.useState(null), 2), placeholder = _g[0], setPlaceholder = _g[1];
     var traverseIndex = traverse && !traverse.execute && traverse.targetId === id
         ? traverse.targetIndex
         : null;
@@ -20,6 +20,7 @@ export function GridDropZone(_a) {
         boxesPerRow: boxesPerRow,
         rowHeight: rowHeight
     };
+    var childCount = React.Children.count(children);
     /**
      * Register our dropzone with our grid context
      */
@@ -31,11 +32,12 @@ export function GridDropZone(_a) {
             right: bounds.right,
             width: bounds.width,
             height: bounds.height,
-            count: items.length,
+            count: childCount,
             grid: grid,
-            disableDrop: disableDrop
+            disableDrop: disableDrop,
+            remeasure: remeasure
         });
-    }, [items, disableDrop, bounds, id, grid]);
+    }, [childCount, disableDrop, bounds, id, grid]);
     /**
      * Unregister when unmounting
      */
@@ -44,10 +46,10 @@ export function GridDropZone(_a) {
     }, [id]);
     // keep an initial list of our item indexes. We use this
     // when animating swap positions on drag events
-    var itemsIndexes = items.map(function (_, i) { return i; });
-    return (React.createElement("div", tslib_1.__assign({ ref: ref }, other), grid.columnWidth === 0
+    var itemsIndexes = React.Children.map(children, function (_, i) { return i; });
+    return (React.createElement("div", tslib_1.__assign({ ref: ref, style: tslib_1.__assign({ position: "relative" }, style) }, other), grid.columnWidth === 0
         ? null
-        : items.map(function (item, i) {
+        : React.Children.map(children, function (child, i) {
             var isTraverseTarget = traverse &&
                 traverse.targetId === id &&
                 traverse.targetIndex === i;
@@ -62,6 +64,8 @@ export function GridDropZone(_a) {
              * @param y
              */
             function onMove(state, x, y) {
+                if (!ref.current)
+                    return;
                 if (draggingIndex !== i) {
                     setDraggingIndex(i);
                 }
@@ -73,8 +77,8 @@ export function GridDropZone(_a) {
                     endTraverse();
                 }
                 var targetIndex = targetDropId !== id
-                    ? items.length
-                    : getTargetIndex(i, grid, items.length, state.delta[0], state.delta[1]);
+                    ? childCount
+                    : getTargetIndex(i, grid, childCount, state.delta[0], state.delta[1]);
                 if (targetIndex !== i) {
                     if ((placeholder && placeholder.targetIndex !== targetIndex) ||
                         !placeholder) {
@@ -94,8 +98,8 @@ export function GridDropZone(_a) {
             function onEnd(state, x, y) {
                 var targetDropId = getActiveDropId(id, x + grid.columnWidth / 2, y + grid.rowHeight / 2);
                 var targetIndex = targetDropId !== id
-                    ? items.length
-                    : getTargetIndex(i, grid, items.length, state.delta[0], state.delta[1]);
+                    ? childCount
+                    : getTargetIndex(i, grid, childCount, state.delta[0], state.delta[1]);
                 // traverse?
                 if (traverse) {
                     onChange(traverse.sourceId, traverse.sourceIndex, traverse.targetIndex, traverse.targetId);
@@ -106,6 +110,23 @@ export function GridDropZone(_a) {
                 setPlaceholder(null);
                 setDraggingIndex(null);
             }
-            return (React.createElement(GridItem, { key: getKey(item), item: item, top: pos.xy[1], disableDrag: disableDrag, endTraverse: endTraverse, mountWithTraverseTarget: isTraverseTarget ? [traverse.tx, traverse.ty] : undefined, left: pos.xy[0], i: i, onMove: onMove, onEnd: onEnd, grid: grid, dragging: i === draggingIndex }, children));
+            function onStart() {
+                measureAll();
+            }
+            return (React.createElement(GridItemContext.Provider, { value: {
+                    top: pos.xy[1],
+                    disableDrag: disableDrag,
+                    endTraverse: endTraverse,
+                    mountWithTraverseTarget: isTraverseTarget
+                        ? [traverse.tx, traverse.ty]
+                        : undefined,
+                    left: pos.xy[0],
+                    i: i,
+                    onMove: onMove,
+                    onEnd: onEnd,
+                    onStart: onStart,
+                    grid: grid,
+                    dragging: i === draggingIndex
+                } }, child));
         })));
 }

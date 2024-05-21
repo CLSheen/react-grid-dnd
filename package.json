@@ -1,11 +1,11 @@
 {
-  "name": "react-grid-dnd",
+  "name": "react-grid-drag",
   "version": "1.0.0",
   "description": "grid style drag and drop for react",
   "main": "cjs/index.js",
   "module": "esm/index.js",
   "typings": "esm/index.d.ts",
-  "author": "Ben McMahen",
+  "author": "Btx",
   "license": "MIT",
   "private": false,
   "keywords": [
@@ -24,14 +24,7 @@
     "build": "yarn run build-esm && yarn run build-other",
     "prepublishOnly": "yarn run build"
   },
-  "homepage": "https://github.com/bmcmahen/react-grid-dnd",
-  "bugs": {
-    "url": "https://github.com/bmcmahen/react-grid-dnd/issues"
-  },
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/bmcmahen/react-grid-dnd.git"
-  },
+
   "peerDependencies": {
     "react": "^16.8.6",
     "react-dom": "^16.8.6",
@@ -67,13 +60,13 @@
     "rollup-plugin-typescript2": "^0.20.1",
     "rollup-plugin-uglify": "^6.0.2",
     "ts-jest": "^24.0.1",
-    "typescript": "^3.4.1",
+    "typescript": "^3.5.0-dev.20190517",
     "webpack": "^4.29.6"
   },
   "dependencies": {
     "@types/react": "^16.8.10",
     "@types/react-dom": "^16.8.3",
-    "react-spring": "^9.0.0-beta.8",
+    "react-spring": "9.0.0-beta.8",
     "resize-observer-polyfill": "^1.5.1",
     "tslib": "^1.9.3"
   },

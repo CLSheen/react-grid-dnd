@@ -4,47 +4,41 @@ import {
   useGestureResponder,
   ResponderEvent
 } from "react-gesture-responder";
-import { SpringValue, animated, interpolate, useSpring } from "react-spring";
-import { ChildRender, GridSettings } from "./grid-types";
+import { animated, interpolate, useSpring } from "react-spring";
+import { GridItemContext } from "./GridItemContext";
 
-interface StyleProps {
-  [x: string]: SpringValue<any>;
-  xy: SpringValue<number[]>;
-  zIndex: SpringValue<string>;
-  scale: SpringValue<number>;
-  opacity: SpringValue<number>;
+interface GridItemProps extends React.HTMLAttributes<HTMLDivElement> {
+  children: React.ReactNode;
 }
 
-type GridItemProps<T> = {
-  item: T;
-  grid: GridSettings;
-  onMove: (state: StateType, x: number, y: number) => void;
-  i: number;
-  endTraverse: () => void;
-  disableDrag?: boolean;
-  onEnd: (state: StateType, x: number, y: number) => void;
-  children: ChildRender<T>;
-  dragging: boolean;
-  top: number;
-  left: number;
-  /** values represent the starrt point where the item should mount */
-  mountWithTraverseTarget?: [number, number];
-};
-
-export function GridItem<T>({
-  item,
-  top,
-  left,
+export function GridItem({
   children,
-  i,
-  dragging: isDragging,
-  onMove,
-  mountWithTraverseTarget,
-  grid,
-  disableDrag,
-  endTraverse,
-  onEnd
-}: GridItemProps<T>) {
+  style,
+  className,
+  ...other
+}: GridItemProps) {
+  const context = React.useContext(GridItemContext);
+
+  if (!context) {
+    throw Error(
+      "Unable to find GridItem context. Please ensure that GridItem is used as a child of GridDropZone"
+    );
+  }
+
+  const {
+    top,
+    disableDrag,
+    endTraverse,
+    onStart,
+    mountWithTraverseTarget,
+    left,
+    i,
+    onMove,
+    onEnd,
+    grid,
+    dragging: isDragging
+  } = context;
+
   const { columnWidth, rowHeight } = grid;
   const dragging = React.useRef(false);
   const startCoords = React.useRef([left, top]);
@@ -53,15 +47,18 @@ export function GridItem<T>({
     if (mountWithTraverseTarget) {
       // this feels really brittle. unsure of a better
       // solution for now.
+
+      const mountXY = mountWithTraverseTarget;
+
+      endTraverse();
+
       return {
-        xy: mountWithTraverseTarget,
+        xy: mountXY,
         immediate: true,
         zIndex: "1",
         scale: 1.1,
         opacity: 0.8
       };
-
-      endTraverse();
     }
 
     return {
@@ -103,6 +100,8 @@ export function GridItem<T>({
           return false;
         }
 
+        onStart();
+
         startCoords.current = [left, top];
         dragging.current = true;
         return true;
@@ -140,29 +139,41 @@ export function GridItem<T>({
     }
   }, [dragging.current, left, top]);
 
-  return (
-    <animated.div
-      {...bind}
-      style={{
-        cursor: "grab",
-        zIndex: styles.zIndex,
-        position: "absolute",
-        width: columnWidth + "px",
-        opacity: styles.opacity,
-        height: rowHeight + "px",
-        boxSizing: "border-box",
-        transform: interpolate(
-          [styles.xy, styles.scale],
-          (xy: any, s: any) =>
-            `translate3d(${xy[0]}px, ${xy[1]}px, 0) scale(${s})`
-        )
-      }}
-    >
-      {children(item, i, {
-        dragging: isDragging,
-        disabled: !!disableDrag,
-        grid
-      })}
-    </animated.div>
+  const props = {
+    className:
+      "GridItem" +
+      (isDragging ? " dragging" : "") +
+      (!!disableDrag ? " disabled" : "") +
+      className
+        ? ` ${className}`
+        : "",
+    ...bind,
+    style: {
+      cursor: !!disableDrag ? "grab" : undefined,
+      zIndex: styles.zIndex,
+      position: "absolute",
+      width: columnWidth + "px",
+      opacity: styles.opacity,
+      height: rowHeight + "px",
+      boxSizing: "border-box",
+      transform: interpolate(
+        [styles.xy, styles.scale],
+        (xy: any, s: any) =>
+          `translate3d(${xy[0]}px, ${xy[1]}px, 0) scale(${s})`
+      ),
+      ...style
+    },
+    ...other
+  };
+
+  return typeof children === "function" ? (
+    children(animated.div, props, {
+      dragging: isDragging,
+      disabled: !!disableDrag,
+      i,
+      grid
+    })
+  ) : (
+    <animated.div {...props}>{children}</animated.div>
   );
 }

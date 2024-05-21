@@ -1,15 +1,11 @@
 import * as React from "react";
-import { ChildRender } from "./grid-types";
-declare type GridDropZoneProps<T> = {
-    items: T[];
+export interface GridDropZoneProps extends React.HTMLAttributes<HTMLDivElement> {
     boxesPerRow: number;
     rowHeight: number;
     id: string;
-    getKey: (item: T) => string | number;
-    children: ChildRender<T>;
+    children: React.ReactNodeArray;
     disableDrag?: boolean;
     disableDrop?: boolean;
     style?: React.CSSProperties;
-};
-export declare function GridDropZone<T>({ items, id, boxesPerRow, children, getKey, disableDrag, disableDrop, rowHeight, ...other }: GridDropZoneProps<T>): JSX.Element;
-export {};
+}
+export declare function GridDropZone({ id, boxesPerRow, children, style, disableDrag, disableDrop, rowHeight, ...other }: GridDropZoneProps): JSX.Element;

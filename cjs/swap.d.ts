@@ -1,1 +1,1 @@
-export default function move<T>(array: Array<T>, moveIndex: number, toIndex: number): T[];
+export declare function swap<T>(array: Array<T>, moveIndex: number, toIndex: number): T[];

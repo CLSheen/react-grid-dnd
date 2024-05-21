@@ -8,10 +8,12 @@ interface RegisterOptions extends Bounds {
     grid: GridSettings;
     /** whether the dropzone is disabled for dropping */
     disableDrop: boolean;
+    remeasure: () => void;
 }
 interface GridContextType {
     register: (id: string, options: RegisterOptions) => void;
     remove: (id: string) => void;
+    measureAll: () => void;
     getActiveDropId: (sourceId: string, x: number, y: number) => string | null;
     startTraverse: (sourceId: string, targetId: string, x: number, y: number, sourceIndex: number) => void;
     traverse: TraverseType | null;

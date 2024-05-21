@@ -9,4 +9,5 @@ export interface Bounds {
 }
 export declare function useMeasure(ref: React.RefObject<HTMLDivElement | null>): {
     bounds: Bounds;
+    remeasure: () => void;
 };

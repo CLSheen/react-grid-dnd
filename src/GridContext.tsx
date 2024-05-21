@@ -2,7 +2,6 @@ import * as React from "react";
 import { Bounds } from "./use-measure";
 import { GridSettings, TraverseType } from "./grid-types";
 import { getPositionForIndex, getIndexFromCoordinates } from "./helpers";
-import { move } from "./move";
 
 interface RegisterOptions extends Bounds {
   /** The number of documents in each grid */
@@ -11,11 +10,13 @@ interface RegisterOptions extends Bounds {
   grid: GridSettings;
   /** whether the dropzone is disabled for dropping */
   disableDrop: boolean;
+  remeasure: () => void;
 }
 
 interface GridContextType {
   register: (id: string, options: RegisterOptions) => void;
   remove: (id: string) => void;
+  measureAll: () => void;
   getActiveDropId: (sourceId: string, x: number, y: number) => string | null;
   startTraverse: (
     sourceId: string,
@@ -45,6 +46,7 @@ export const GridContext = React.createContext<GridContextType>({
   remove: noop,
   getActiveDropId: noop,
   startTraverse: noop,
+  measureAll: noop,
   traverse: null,
   endTraverse: noop,
   onChange: noop
@@ -94,7 +96,18 @@ export function GridContextProvider({
    */
 
   function getFixedPosition(sourceId: string, rx: number, ry: number) {
-    const { left, top } = dropRefs.current.get(sourceId)!;
+    const item = dropRefs.current.get(sourceId)!;
+
+    // When items are removed from the DOM, the left and top values could be undefined.
+    if (!item) {
+      return {
+        x: rx,
+        y: ry
+      };
+    }
+
+    const { left, top } = item;
+
     return {
       x: left + rx,
       y: top + ry
@@ -180,15 +193,18 @@ export function GridContextProvider({
     const { x: fx, y: fy } = getFixedPosition(sourceId, x, y);
     const { x: rx, y: ry } = getRelativePosition(targetId, fx, fy);
     const { grid: targetGrid, count } = dropRefs.current.get(targetId)!;
+
     const targetIndex = getIndexFromCoordinates(
       rx + targetGrid.columnWidth / 2,
       ry + targetGrid.rowHeight / 2,
       targetGrid,
       count
     );
+
     const {
       xy: [px, py]
     } = getPositionForIndex(targetIndex, targetGrid);
+
     const { x: dx, y: dy } = diffDropzones(sourceId, targetId);
 
     // only update traverse if targetId or targetIndex have changed
@@ -267,6 +283,12 @@ export function GridContextProvider({
     onChange(sourceId, sourceIndex, targetIndex, targetId);
   }
 
+  function measureAll() {
+    dropRefs.current.forEach(ref => {
+      ref.remeasure();
+    });
+  }
+
   return (
     <GridContext.Provider
       value={{
@@ -275,6 +297,7 @@ export function GridContextProvider({
         getActiveDropId,
         startTraverse,
         traverse,
+        measureAll,
         endTraverse,
         onChange: onSwitch
       }}

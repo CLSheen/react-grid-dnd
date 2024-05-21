@@ -4,12 +4,12 @@ export interface GridSettings {
     rowHeight: number;
     columnWidth: number;
 }
-interface ChildRenderProps {
-    grid: GridSettings;
-    disabled: boolean;
+export declare type ChildRender = (component: any, props: any, state: {
     dragging: boolean;
-}
-export declare type ChildRender<T> = (item: T, i: number, props: ChildRenderProps) => React.ReactNode;
+    disabled: boolean;
+    i: number;
+    grid: GridSettings;
+}) => React.ReactNode;
 /**
  * A traverse captures information about dragging a grid item
  * from one list to another.
@@ -25,4 +25,3 @@ export interface TraverseType {
     targetIndex: number;
     execute?: boolean;
 }
-export {};

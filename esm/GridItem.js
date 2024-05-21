@@ -2,8 +2,14 @@ import * as tslib_1 from "tslib";
 import * as React from "react";
 import { useGestureResponder } from "react-gesture-responder";
 import { animated, interpolate, useSpring } from "react-spring";
+import { GridItemContext } from "./GridItemContext";
 export function GridItem(_a) {
-    var item = _a.item, top = _a.top, left = _a.left, children = _a.children, i = _a.i, isDragging = _a.dragging, onMove = _a.onMove, mountWithTraverseTarget = _a.mountWithTraverseTarget, grid = _a.grid, disableDrag = _a.disableDrag, endTraverse = _a.endTraverse, onEnd = _a.onEnd;
+    var children = _a.children, style = _a.style, className = _a.className, other = tslib_1.__rest(_a, ["children", "style", "className"]);
+    var context = React.useContext(GridItemContext);
+    if (!context) {
+        throw Error("Unable to find GridItem context. Please ensure that GridItem is used as a child of GridDropZone");
+    }
+    var top = context.top, disableDrag = context.disableDrag, endTraverse = context.endTraverse, onStart = context.onStart, mountWithTraverseTarget = context.mountWithTraverseTarget, left = context.left, i = context.i, onMove = context.onMove, onEnd = context.onEnd, grid = context.grid, isDragging = context.dragging;
     var columnWidth = grid.columnWidth, rowHeight = grid.rowHeight;
     var dragging = React.useRef(false);
     var startCoords = React.useRef([left, top]);
@@ -11,14 +17,15 @@ export function GridItem(_a) {
         if (mountWithTraverseTarget) {
             // this feels really brittle. unsure of a better
             // solution for now.
+            var mountXY = mountWithTraverseTarget;
+            endTraverse();
             return {
-                xy: mountWithTraverseTarget,
+                xy: mountXY,
                 immediate: true,
                 zIndex: "1",
                 scale: 1.1,
                 opacity: 0.8
             };
-            endTraverse();
         }
         return {
             xy: [left, top],
@@ -53,6 +60,7 @@ export function GridItem(_a) {
             if (disableDrag) {
                 return false;
             }
+            onStart();
             startCoords.current = [left, top];
             dragging.current = true;
             return true;
@@ -84,20 +92,18 @@ export function GridItem(_a) {
             });
         }
     }, [dragging.current, left, top]);
-    return (React.createElement(animated.div, tslib_1.__assign({}, bind, { style: {
-            cursor: "grab",
-            zIndex: styles.zIndex,
-            position: "absolute",
-            width: columnWidth + "px",
-            opacity: styles.opacity,
-            height: rowHeight + "px",
-            boxSizing: "border-box",
-            transform: interpolate([styles.xy, styles.scale], function (xy, s) {
+    var props = tslib_1.__assign({ className: "GridItem" +
+            (isDragging ? " dragging" : "") +
+            (!!disableDrag ? " disabled" : "") +
+            className
+            ? " " + className
+            : "" }, bind, { style: tslib_1.__assign({ cursor: !!disableDrag ? "grab" : undefined, zIndex: styles.zIndex, position: "absolute", width: columnWidth + "px", opacity: styles.opacity, height: rowHeight + "px", boxSizing: "border-box", transform: interpolate([styles.xy, styles.scale], function (xy, s) {
                 return "translate3d(" + xy[0] + "px, " + xy[1] + "px, 0) scale(" + s + ")";
-            })
-        } }), children(item, i, {
+            }) }, style) }, other);
+    return typeof children === "function" ? (children(animated.div, props, {
         dragging: isDragging,
         disabled: !!disableDrag,
+        i: i,
         grid: grid
-    })));
+    })) : (React.createElement(animated.div, tslib_1.__assign({}, props), children));
 }

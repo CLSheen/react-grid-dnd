@@ -22,5 +22,8 @@ export function useMeasure(ref) {
         }
         return function () { return observer.disconnect(); };
     }, [ref, observer]);
-    return { bounds: bounds };
+    function remeasure() {
+        setBounds(ref.current.getBoundingClientRect());
+    }
+    return { bounds: bounds, remeasure: remeasure };
 }

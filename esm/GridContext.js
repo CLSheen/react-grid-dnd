@@ -9,6 +9,7 @@ export var GridContext = React.createContext({
     remove: noop,
     getActiveDropId: noop,
     startTraverse: noop,
+    measureAll: noop,
     traverse: null,
     endTraverse: noop,
     onChange: noop
@@ -39,7 +40,15 @@ export function GridContextProvider(_a) {
      * @param ry relative y
      */
     function getFixedPosition(sourceId, rx, ry) {
-        var _a = dropRefs.current.get(sourceId), left = _a.left, top = _a.top;
+        var item = dropRefs.current.get(sourceId);
+        // When items are removed from the DOM, the left and top values could be undefined.
+        if (!item) {
+            return {
+                x: rx,
+                y: ry
+            };
+        }
+        var left = item.left, top = item.top;
         return {
             x: left + rx,
             y: top + ry
@@ -172,12 +181,18 @@ export function GridContextProvider(_a) {
         setTraverse(tslib_1.__assign({}, traverse, { execute: true }));
         onChange(sourceId, sourceIndex, targetIndex, targetId);
     }
+    function measureAll() {
+        dropRefs.current.forEach(function (ref) {
+            ref.remeasure();
+        });
+    }
     return (React.createElement(GridContext.Provider, { value: {
             register: register,
             remove: remove,
             getActiveDropId: getActiveDropId,
             startTraverse: startTraverse,
             traverse: traverse,
+            measureAll: measureAll,
             endTraverse: endTraverse,
             onChange: onSwitch
         } }, children));
