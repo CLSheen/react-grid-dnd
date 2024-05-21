@@ -56,8 +56,8 @@ export function GridItem({
         xy: mountXY,
         immediate: true,
         zIndex: "1",
-        scale: 1.1,
-        opacity: 0.8
+        scale: 1,
+        opacity: 1
       };
     }
 
@@ -78,8 +78,8 @@ export function GridItem({
       xy: [x, y],
       zIndex: "1",
       immediate: true,
-      opacity: 0.8,
-      scale: 1.1
+      opacity: 1,
+      scale: 1
     });
 
     onMove(state, x, y);
